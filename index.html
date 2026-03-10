@@ -12,6 +12,7 @@
       overflow: hidden;
       background: #FFFFFF;
       font-family: 'Segoe UI', Arial, sans-serif;
+
       display: flex;
       justify-content: center;
       align-items: center;
@@ -19,12 +20,11 @@
 
     .row {
       display: flex;
-      justify-content: center;
       align-items: center;
-      gap: 20px;
-      flex-wrap: nowrap;
+      gap: 35px;
     }
 
+    /* DÍAS LABORABLES GRANDES */
     #bizCount {
       font-size: 95px;
       font-weight: 800;
@@ -32,29 +32,36 @@
       line-height: 1;
     }
 
-    @media (max-width: 680px) {
-      .row { flex-direction: column; }
-      #bizCount { font-size: 100px; }
+    /* RELOJ A LA DERECHA, UN POCO MÁS BAJO */
+    #clock {
+      font-size: 55px;
+      font-weight: 700;
+      color: #0E4194;
+      transform: translateY(14px);
+      letter-spacing: 2px;
     }
   </style>
 </head>
 
 <body>
-  <div class="card">
-    <div class="row">
-      <div id="bizCount">…</div>
-    </div>
+
+  <div class="row">
+    <div id="bizCount">…</div>
+    <div id="clock">--:--:--</div>
   </div>
 
   <script>
-    // ===============================
-    //   CORRECCIÓN PRINCIPAL
-    //   USAR FECHAS EN HORARIO LOCAL
-    // ===============================
+    // ======================================
+    //  FECHA OBJETIVO (LOCAL, Europe/Madrid)
+    // ======================================
+    // 1 julio 2026, 00:00 hora de Barcelona
+    const targetDate = new Date(2026, 6, 1, 0, 0, 0);
 
+    // ======================================
+    // UTILIDADES DE FECHAS LOCALTIME
+    // ======================================
     function localDate(y, m, d) {
-      // m = 1–12
-      return new Date(y, m - 1, d);  // local time
+      return new Date(y, m - 1, d);
     }
 
     function sameLocalDay(a, b) {
@@ -65,16 +72,10 @@
       );
     }
 
-    // ----------------------------------
-    // CONFIGURACIÓN DEL RANGO A CONTAR
-    // ----------------------------------
-    const targetDate = localDate(2026, 7, 1);   // 1 julio 2026 local
-    const countToday = true;
+    const countToday = false;
     const includeTarget = false;
 
-    // ----------------------------------
-    // FESTIVOS CATALUÑA 2026 (solo local)
-    // ----------------------------------
+    // FESTIVOS CATALUÑA 2026
     const catalunyaHolidays2026 = [
       localDate(2026,4,1),
       localDate(2026,4,2),
@@ -83,21 +84,20 @@
       localDate(2026,5,1),
       localDate(2026,6,22),
       localDate(2026,6,23),
-      localDate(2026,6,24),
+      localDate(2026,6,24)
     ];
 
     function isHoliday(d) {
       return catalunyaHolidays2026.some(h => sameLocalDay(h, d));
     }
-
     function isWeekend(d) {
-      const wd = d.getDay(); // 0 dom - 6 sab (LOCAL)
+      const wd = d.getDay();
       return wd === 0 || wd === 6;
     }
 
-    // ----------------------------------
-    //     CÁLCULO DE DÍAS LABORABLES
-    // ----------------------------------
+    // ======================================
+    //      DÍAS LABORABLES
+    // ======================================
     function businessDaysBetween(startDate, endDate) {
       const start = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
       const end   = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
@@ -113,25 +113,52 @@
       let cur = new Date(from);
 
       while (cur <= to) {
-        if (!isWeekend(cur) && !isHoliday(cur)) {
-          count++;
-        }
+        if (!isWeekend(cur) && !isHoliday(cur)) count++;
         cur.setDate(cur.getDate() + 1);
       }
       return count;
     }
 
-    // ----------------------------------
-    //       ACTUALIZAR EN PANTALLA
-    // ----------------------------------
-    function update() {
+    function updateDays() {
       const now = new Date();
       const biz = businessDaysBetween(now, targetDate);
       document.getElementById("bizCount").textContent = biz;
     }
 
-    update();
-    setInterval(update, 3600000); // refresco cada hora
+    // ======================================
+    //      RELOJ HH:MM:SS (NORMAL)
+    // ======================================
+    
+function updateClock() {
+    const now = new Date();
+    const diffMs = targetDate - now;
+
+    // 🔧 Ajuste DST para que el reloj no “pierda”/“gane” 1h por el cambio del 29/03
+    const offsetNow = now.getTimezoneOffset();           // ej.: 60 (invierno)
+    const offsetTarget = targetDate.getTimezoneOffset(); // ej.: 120 (verano)
+    const dstDeltaMs = (offsetNow - offsetTarget) * 60 * 1000;
+
+    const adjDiffMs = diffMs + dstDeltaMs;
+
+    const totalSec = Math.max(0, Math.floor(adjDiffMs / 1000));
+    const sec = totalSec % 60;
+    const min = Math.floor(totalSec / 60) % 60;
+    const hour = Math.floor(totalSec / 3600) % 24;
+
+    document.getElementById("clock").textContent =
+      String(hour).padStart(2, "0") + ":" +
+      String(min).padStart(2, "0") + ":" +
+      String(sec).padStart(2, "0");
+  }
+
+    // ======================================
+    // INICIALIZACIÓN
+    // ======================================
+    updateDays();
+    updateClock();
+
+    setInterval(updateClock, 1000);     // reloj
+    setInterval(updateDays, 3600000);   // días laborables cada hora
   </script>
 
 </body>
