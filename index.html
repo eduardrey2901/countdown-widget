@@ -10,6 +10,7 @@
       display: flex;
       justify-content: center;
       padding-top: 70px;
+      margin: 0;
     }
 
     .card {
@@ -24,72 +25,42 @@
 
     .row {
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
-      gap: 40px;
-      flex-wrap: wrap;
-    }
-
-    .col {
-      flex: 1;
-      min-width: 260px;
+      gap: 20px;
+      flex-wrap: nowrap;
     }
 
     #bizCount {
       font-size: 95px;
       font-weight: 800;
       color: #0078D4;
-      margin-bottom: 10px;
+      line-height: 1;
     }
 
-    .label {
-      font-size: 26px;
-      color: #444;
-      margin-bottom: 10px;
-      font-weight: 500;
-    }
-
-    #dhms {
+    .label-inline {
       font-size: 32px;
-      color: #222;
-      font-weight: 700;
-    }
-
-    .sub {
-      margin-top: 10px;
-      font-size: 18px;
-      color: #555;
+      color: #444;
+      font-weight: 500;
+      line-height: 1;
+      white-space: nowrap;
     }
 
     @media (max-width: 680px) {
       .row { flex-direction: column; }
       #bizCount { font-size: 70px; }
-      #dhms { font-size: 26px; }
+      .label-inline { font-size: 26px; }
     }
   </style>
 </head>
 <body>
 
   <div class="card">
-    
     <div class="row">
-
-      <!-- COLUMNA IZQUIERDA -->
-      <div class="col">
-        <div id="bizCount">…</div>
-        <div class="label">días laborales</div>
-      </div>
-
-      <!-- COLUMNA DERECHA -->
-      <div class="col">
-        <div id="dhms">…</div>
-        <div class="sub">tiempo real restante</div>
-      </div>
-
+      <div id="bizCount">…</div>
+      <div class="label-inline">días laborables</div>
     </div>
-
   </div>
-
 
   <script>
     // ===== CONFIGURACIÓN =====
@@ -105,7 +76,6 @@
     ];
     const holidaySetsByYear = { 2026: new Set(catalunyaHolidays2026) };
 
-    // ===== UTILIDADES =====
     function toISODate(d) { return d.toISOString().slice(0,10); }
 
     function isWeekend(d) {
@@ -140,30 +110,16 @@
       return count;
     }
 
-    function formatDHMS(ms) {
-      if (ms < 0) ms = 0;
-      const total = Math.floor(ms / 1000);
-      const d = Math.floor(total / 86400);
-      const h = Math.floor((total % 86400) / 3600);
-      const m = Math.floor((total % 3600) / 60);
-      const s = total % 60;
-      return `${d}d : ${String(h).padStart(2,"0")}h : ${String(m).padStart(2,"0")}m : ${String(s).padStart(2,"0")}s`;
-    }
-
-    // ===== ACTUALIZACIÓN =====
     function update() {
       const now = new Date();
       const biz = businessDaysBetween(now, targetDate);
       document.getElementById("bizCount").textContent = biz;
-
-      const diff = targetDate - now;
-      document.getElementById("dhms").textContent = formatDHMS(diff);
     }
 
     update();
-    setInterval(update, 1000);
+    // refrescar una vez por hora (suficiente, ya no hay tiempo real)
+    setInterval(update, 3600000);
   </script>
 
 </body>
 </html>
-
