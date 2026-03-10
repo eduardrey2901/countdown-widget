@@ -3,19 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <title>Cuenta atrás</title>
+
   <style>
-    body {
-      font-family: 'Segoe UI', Arial, sans-serif;
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow: hidden; /* evita scroll en iObeya */
       background: #eef1f5;
+      font-family: 'Segoe UI', Arial, sans-serif;
+
       display: flex;
       justify-content: center;
-      padding-top: 70px;
-      margin: 0;
+      align-items: center; /* centra verticalmente */
     }
 
     .card {
       background: #fff;
-      padding: 50px 70px;
+      padding: 40px 60px;
       border-radius: 22px;
       box-shadow: 0 12px 35px rgba(0,0,0,0.12);
       text-align: center;
@@ -53,6 +58,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <div class="card">
@@ -76,7 +82,9 @@
     ];
     const holidaySetsByYear = { 2026: new Set(catalunyaHolidays2026) };
 
-    function toISODate(d) { return d.toISOString().slice(0,10); }
+    function toISODate(d) {
+      return d.toISOString().slice(0, 10);
+    }
 
     function isWeekend(d) {
       return d.getDay() === 0 || d.getDay() === 6;
@@ -94,8 +102,8 @@
       let from = new Date(start);
       let to   = new Date(end);
 
-      if (!countToday) from.setDate(from.getDate()+1);
-      if (!includeTarget) to.setDate(to.getDate()-1);
+      if (!countToday) from.setDate(from.getDate() + 1);
+      if (!includeTarget) to.setDate(to.getDate() - 1);
 
       if (to < from) return 0;
 
@@ -117,8 +125,7 @@
     }
 
     update();
-    // refrescar una vez por hora (suficiente, ya no hay tiempo real)
-    setInterval(update, 3600000);
+    setInterval(update, 3600000); // refresco cada hora
   </script>
 
 </body>
