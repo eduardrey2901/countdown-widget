@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cuenta atrás</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #eef1f5;
+      display: flex;
+      justify-content: center;
+      padding-top: 70px;
+    }
+
+    .card {
+      background: #fff;
+      padding: 50px 70px;
+      border-radius: 22px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.12);
+      text-align: center;
+      max-width: 920px;
+      width: 90%;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 40px;
+      flex-wrap: wrap;
+    }
+
+    .col {
+      flex: 1;
+      min-width: 260px;
+    }
+
+    #bizCount {
+      font-size: 95px;
+      font-weight: 800;
+      color: #0078D4;
+      margin-bottom: 10px;
+    }
+
+    .label {
+      font-size: 26px;
+      color: #444;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    #dhms {
+      font-size: 32px;
+      color: #222;
+      font-weight: 700;
+    }
+
+    .sub {
+      margin-top: 10px;
+      font-size: 18px;
+      color: #555;
+    }
+
+    @media (max-width: 680px) {
+      .row { flex-direction: column; }
+      #bizCount { font-size: 70px; }
+      #dhms { font-size: 26px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    
+    <div class="row">
+
+      <!-- COLUMNA IZQUIERDA -->
+      <div class="col">
+        <div id="bizCount">…</div>
+        <div class="label">días laborales</div>
+      </div>
+
+      <!-- COLUMNA DERECHA -->
+      <div class="col">
+        <div id="dhms">…</div>
+        <div class="sub">tiempo real restante</div>
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <script>
+    // ===== CONFIGURACIÓN =====
+    const targetDate = new Date("2026-07-01T00:00:00");
+    const countToday = false;
+    const includeTarget = false;
+
+    // Festivos oficiales Cataluña 2026 (nacionales + autonómicos)
+    const catalunyaHolidays2026 = [
+      "2026-01-01","2026-01-06","2026-04-03","2026-04-06",
+      "2026-05-01","2026-06-24","2026-08-15","2026-09-11",
+      "2026-10-12","2026-12-08","2026-12-25","2026-12-26"
+    ];
+    const holidaySetsByYear = { 2026: new Set(catalunyaHolidays2026) };
+
+    // ===== UTILIDADES =====
+    function toISODate(d) { return d.toISOString().slice(0,10); }
+
+    function isWeekend(d) {
+      return d.getDay() === 0 || d.getDay() === 6;
+    }
+
+    function isHoliday(d) {
+      const set = holidaySetsByYear[d.getFullYear()];
+      return set && set.has(toISODate(d));
+    }
+
+    function businessDaysBetween(startDate, endDate) {
+      const start = new Date(startDate); start.setHours(0,0,0,0);
+      const end   = new Date(endDate);   end.setHours(0,0,0,0);
+
+      let from = new Date(start);
+      let to   = new Date(end);
+
+      if (!countToday) from.setDate(from.getDate()+1);
+      if (!includeTarget) to.setDate(to.getDate()-1);
+
+      if (to < from) return 0;
+
+      let count = 0;
+      const d = new Date(from);
+
+      while (d <= to) {
+        if (!isWeekend(d) && !isHoliday(d)) count++;
+        d.setDate(d.getDate() + 1);
+      }
+
+      return count;
+    }
+
+    function formatDHMS(ms) {
+      if (ms < 0) ms = 0;
+      const total = Math.floor(ms / 1000);
+      const d = Math.floor(total / 86400);
+      const h = Math.floor((total % 86400) / 3600);
+      const m = Math.floor((total % 3600) / 60);
+      const s = total % 60;
+      return `${d}d : ${String(h).padStart(2,"0")}h : ${String(m).padStart(2,"0")}m : ${String(s).padStart(2,"0")}s`;
+    }
+
+    // ===== ACTUALIZACIÓN =====
+    function update() {
+      const now = new Date();
+      const biz = businessDaysBetween(now, targetDate);
+      document.getElementById("bizCount").textContent = biz;
+
+      const diff = targetDate - now;
+      document.getElementById("dhms").textContent = formatDHMS(diff);
+    }
+
+    update();
+    setInterval(update, 1000);
+  </script>
+
+</body>
+</html>
